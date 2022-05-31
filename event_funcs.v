@@ -1,9 +1,11 @@
 module main
 
+import os
 import gg
 
 struct EvtFunc {
 	code gg.KeyCode
+	modifier gg.Modifier
 	fun  fn (mut editor EatSleepCode)
 }
 
@@ -16,9 +18,6 @@ const (
 		fun: event_update_ctrlq
 	}]
 	evtfuncs_normal = [EvtFunc{
-		code: .i
-		fun: event_update_i
-	}, EvtFunc{
 		code: .down
 		fun: event_update_up
 	}, EvtFunc{
@@ -87,31 +86,24 @@ const (
 )
 
 fn event_update_ctrls(mut editor EatSleepCode) {
+	if editor.buffers.len == 0 {
+		return
+	}
+	mut buf := &editor.buffers[editor.current_buffer]
+	text := buf.context_content.join('\n')
+	os.write_file(buf.file_path, text) or {}
 }
 
 fn event_update_ctrlq(mut editor EatSleepCode) {
 	editor.win.ctx.quit()
 }
 
-fn event_update_i(mut editor EatSleepCode) {
-	if editor.buffers.len == 0 {
-		return
-	}
-	if editor.buffers[editor.current_buffer].controls.current_mode != .normal {
-		return
-	}
-	editor.buffers[editor.current_buffer].controls.current_mode = .insert
-}
 
 fn event_update_escape(mut editor EatSleepCode) {
 	if editor.buffers.len == 0 {
 		return
 	}
 	editor.buffers[editor.current_buffer].controls.current_mode = .normal
-	if editor.last_keys.len == 0 {
-		return
-	}
-	editor.last_keys.delete_many(0, editor.last_keys.len - 1)
 }
 
 fn event_update_down(mut editor EatSleepCode) {
@@ -183,16 +175,25 @@ fn event_update_right(mut editor EatSleepCode) {
 	buf.controls.cursor_relative_x += 1
 }
 
-fn event_update_char(c u32, mut editor EatSleepCode) {
-	if editor.last_keys.len == 10 {
-		editor.last_keys.delete(0)
+fn event_update_i(mut editor EatSleepCode) {
+	if editor.buffers.len == 0 {
+		return
 	}
-	editor.last_keys << convert_c_to_code[rune(c)] or { gg.KeyCode.invalid }
+	if editor.buffers[editor.current_buffer].controls.current_mode != .normal {
+		return
+	}
+	editor.buffers[editor.current_buffer].controls.current_mode = .insert
+}
+
+fn event_update_char(c u32, mut editor EatSleepCode) {
 	if editor.buffers.len == 0 {
 		return
 	}
 	mut buf := &editor.buffers[editor.current_buffer]
 	if buf.controls.current_mode != .insert {
+		if buf.controls.current_mode == .normal {
+			event_update_i(mut editor)
+		}
 		return
 	}
 	mut b := buf.context_content[buf.controls.cursor_file_y].runes()
@@ -200,5 +201,4 @@ fn event_update_char(c u32, mut editor EatSleepCode) {
 	buf.context_content[buf.controls.cursor_file_y] = b.string()
 	buf.controls.cursor_file_x += 1
 	buf.controls.cursor_relative_x += 1
-	editor.last_keys.delete_last()
 }
