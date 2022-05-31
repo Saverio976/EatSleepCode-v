@@ -34,7 +34,7 @@ mut:
 	file_name       string   [required]
 	file_path       string   [required]
 	context_content []string = []string{}
-	max_number_line usize
+	max_number_line int
 	controls        Controls
 }
 
@@ -76,9 +76,21 @@ fn (editor EatSleepCode) draw_buffer() {
 	lines := editor.buffers[editor.current_buffer].context_content
 	editor.win.ctx.draw_rect_filled(0, offset_y, editor.win.width, (editor.win.char_size +
 		editor.win.char_space) * lines.len + editor.win.char_space, gx.rgb(255, 0, 0))
-	for i in 0..lines.len {
-		true_line := lines[i].replace('\t', '    ')
-		editor.draw_text(5, i + 2, true_line, false, false, gx.black)
+	buf := editor.buffers[editor.current_buffer]
+	y := buf.controls.cursor_file_y
+	x := buf.controls.cursor_file_x
+	cur_line := lines[y]
+	mut b := cur_line.runes()
+	b.insert(x, rune(`|`))
+	mut str := b.string()
+	str = str.replace('\t', '    ')
+	for i in 0 .. lines.len {
+		if i == y {
+			editor.draw_text(5, i + 2, str, false, false, gx.black)
+		} else {
+			true_line := lines[i].replace('\t', '    ')
+			editor.draw_text(5, i + 2, true_line, false, false, gx.black)
+		}
 	}
 }
 
@@ -108,7 +120,7 @@ fn new_file(path string) ?File {
 		file_name: filename
 		file_path: path
 		context_content: lines
-		max_number_line: usize(lines.len)
+		max_number_line: lines.len
 	}
 	return file
 }
