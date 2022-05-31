@@ -7,3 +7,4 @@ eatsleepcode
 *.dylib
 *.dll
 vls.log
+tmp/
