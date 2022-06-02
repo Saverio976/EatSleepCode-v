@@ -99,14 +99,20 @@ fn (editor EatSleepCode) draw_buffer() {
 	b.insert(buf.controls.cursor_file_x, rune(`|`))
 	start := buf.context_rect.left
 	end := start + buf.context_rect.width
-	end_line := if lines.len < buf.context_rect.height - 1 { lines.len } else { buf.context_rect.height - 1 }
+	end_line := if lines.len < buf.context_rect.top + buf.context_rect.height {
+		lines.len
+	} else {
+		buf.context_rect.height + buf.context_rect.top
+	}
 	for i in buf.context_rect.top .. end_line {
 		if i == buf.controls.cursor_file_y {
 			true_line := get_str_print(b.string(), start, end + 1)
-			editor.draw_text(5, i + 2, true_line, false, false, gx.white)
+			editor.draw_text(5, i + 2 - buf.context_rect.top, true_line, false, false,
+				gx.white)
 		} else {
 			true_line := get_str_print(lines[i], start, end)
-			editor.draw_text(5, i + 2, true_line, false, false, gx.white)
+			editor.draw_text(5, i + 2 - buf.context_rect.top, true_line, false, false,
+				gx.white)
 		}
 	}
 }
@@ -133,7 +139,8 @@ fn (mut editor EatSleepCode) update_info() {
 	}
 	offset_y := (editor.win.char_size + editor.win.char_space) * 2
 	mut buf := &editor.buffers[editor.current_buffer]
-	buf.context_rect.height = int(editor.win.height - offset_y) / (editor.win.char_size + editor.win.char_space)
+	buf.context_rect.height = int(editor.win.height - offset_y) / (editor.win.char_size +
+		editor.win.char_space)
 	buf.context_rect.width = 80
 }
 

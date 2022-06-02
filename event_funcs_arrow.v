@@ -8,10 +8,14 @@ fn event_update_down(mut editor EatSleepCode) {
 	if buf.controls.cursor_file_y <= 0 {
 		buf.controls.cursor_file_y = 0
 		buf.controls.cursor_relative_y = 0
+		buf.context_rect.top = 0
 		return
 	}
 	buf.controls.cursor_file_y -= 1
 	buf.controls.cursor_relative_y -= 1
+	if buf.controls.cursor_relative_y <= buf.context_rect.top {
+		buf.context_rect.top -= 1
+	}
 	line := buf.context_content[buf.controls.cursor_file_y]
 	if buf.controls.cursor_file_x >= line.len {
 		buf.controls.cursor_file_x = line.len
@@ -27,11 +31,15 @@ fn event_update_up(mut editor EatSleepCode) {
 	mut buf := &editor.buffers[editor.current_buffer]
 	if buf.controls.cursor_file_y >= buf.max_number_line - 1 {
 		buf.controls.cursor_file_y = buf.max_number_line - 1
-		buf.controls.cursor_relative_y += buf.max_number_line - 1
+		buf.controls.cursor_relative_y = buf.max_number_line - 1
+		buf.context_rect.top = buf.max_number_line - 1
 		return
 	}
 	buf.controls.cursor_file_y += 1
 	buf.controls.cursor_relative_y += 1
+	if buf.controls.cursor_relative_y >= buf.context_rect.top + buf.context_rect.height {
+		buf.context_rect.top += 1
+	}
 	line := buf.context_content[buf.controls.cursor_file_y]
 	if buf.controls.cursor_file_x >= line.len {
 		buf.controls.cursor_file_x = line.len
