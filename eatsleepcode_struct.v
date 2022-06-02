@@ -20,6 +20,14 @@ enum Mode {
 	visual
 }
 
+struct Rect {
+mut:
+	left   int
+	top    int
+	width  int
+	height int
+}
+
 struct Controls {
 mut:
 	cursor_relative_x int
@@ -34,6 +42,7 @@ mut:
 	file_name       string   [required]
 	file_path       string   [required]
 	context_content []string = []string{}
+	context_rect    Rect
 	max_number_line int
 	controls        Controls
 }
@@ -67,6 +76,16 @@ fn (editor EatSleepCode) draw_mode() {
 	editor.draw_text(5, 0, text, true, false, gx.blue)
 }
 
+fn get_str_print(s string, start int, end int) string {
+	if s.len <= start || s.len == 0 {
+		return ''
+	}
+	max := if end < s.len { end } else { s.len - 1 }
+	mut e := s.substr_with_check(start, max + 1) or { '' }
+	e = e.replace('\t', '    ')
+	return e
+}
+
 fn (editor EatSleepCode) draw_buffer() {
 	if editor.buffers.len == 0 {
 		return
@@ -76,37 +95,46 @@ fn (editor EatSleepCode) draw_buffer() {
 	editor.win.ctx.draw_rect_empty(2, offset_y, editor.win.width - 2, (editor.win.char_size +
 		editor.win.char_space) * lines.len + editor.win.char_space, gx.gray)
 	buf := editor.buffers[editor.current_buffer]
-	y := buf.controls.cursor_file_y
-	x := buf.controls.cursor_file_x
-	cur_line := lines[y]
-	mut b := cur_line.runes()
-	b.insert(x, rune(`|`))
-	mut str := b.string()
-	str = str.replace('\t', '    ')
-	for i in 0 .. lines.len {
-		if i == y {
-			editor.draw_text(5, i + 2, str, false, false, gx.white)
+	mut b := lines[buf.controls.cursor_file_y].runes()
+	b.insert(buf.controls.cursor_file_x, rune(`|`))
+	start := buf.context_rect.left
+	end := start + buf.context_rect.width
+	end_line := if lines.len < buf.context_rect.height - 1 { lines.len } else { buf.context_rect.height - 1 }
+	for i in buf.context_rect.top .. end_line {
+		if i == buf.controls.cursor_file_y {
+			true_line := get_str_print(b.string(), start, end + 1)
+			editor.draw_text(5, i + 2, true_line, false, false, gx.white)
 		} else {
-			true_line := lines[i].replace('\t', '    ')
+			true_line := get_str_print(lines[i], start, end)
 			editor.draw_text(5, i + 2, true_line, false, false, gx.white)
 		}
 	}
 }
 
 fn (editor EatSleepCode) draw_text(x int, line_y int, text string, is_bold bool, is_italic bool, color gx.Color) {
+	y := (line_y * (editor.win.char_size + editor.win.char_space)) + editor.win.char_space
+	if y > editor.win.height || y < 0 - editor.win.char_size - editor.win.char_size {
+		return
+	}
 	cfg := gx.TextCfg{
 		size: editor.win.char_size
 		color: color
 		italic: is_italic
 		bold: is_bold
 	}
-	y := (line_y * (editor.win.char_size + editor.win.char_space)) + editor.win.char_space
 	editor.win.ctx.draw_text(x, y, text, cfg)
 }
 
 fn (mut editor EatSleepCode) update_info() {
 	editor.win.width = editor.win.ctx.window_size().width
 	editor.win.height = editor.win.ctx.window_size().height
+	if editor.buffers.len == 0 {
+		return
+	}
+	offset_y := (editor.win.char_size + editor.win.char_space) * 2
+	mut buf := &editor.buffers[editor.current_buffer]
+	buf.context_rect.height = int(editor.win.height - offset_y) / (editor.win.char_size + editor.win.char_space)
+	buf.context_rect.width = 80
 }
 
 fn new_file(path string) ?File {
