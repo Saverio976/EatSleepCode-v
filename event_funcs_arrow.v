@@ -56,10 +56,14 @@ fn event_update_left(mut editor EatSleepCode) {
 	if buf.controls.cursor_file_x <= 0 {
 		buf.controls.cursor_file_x = 0
 		buf.controls.cursor_relative_x = 0
+		buf.context_rect.left = 0
 		return
 	}
 	buf.controls.cursor_file_x -= 1
 	buf.controls.cursor_relative_x -= 1
+	if buf.controls.cursor_relative_x <= buf.context_rect.left {
+		buf.context_rect.left -= 1
+	}
 }
 
 fn event_update_right(mut editor EatSleepCode) {
@@ -71,8 +75,12 @@ fn event_update_right(mut editor EatSleepCode) {
 	if buf.controls.cursor_file_x >= line.len {
 		buf.controls.cursor_file_x = line.len
 		buf.controls.cursor_relative_x = line.len
+		buf.context_rect.left = line.len
 		return
 	}
 	buf.controls.cursor_file_x += 1
 	buf.controls.cursor_relative_x += 1
+	if buf.controls.cursor_relative_x >= buf.context_rect.left + buf.context_rect.width {
+		buf.context_rect.left += 1
+	}
 }
