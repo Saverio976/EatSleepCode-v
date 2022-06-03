@@ -128,7 +128,7 @@ fn (editor EatSleepCode) draw_text(x int, line_y int, text string, is_bold bool,
 		italic: is_italic
 		bold: is_bold
 	}
-	editor.win.ctx.draw_text(x, y, text, cfg)
+	draw_color_text(editor, text, cfg, x, y)
 }
 
 fn (mut editor EatSleepCode) update_info() {

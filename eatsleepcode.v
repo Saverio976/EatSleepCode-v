@@ -31,6 +31,7 @@ fn main() {
 		mut file := new_file(os.args[1])?
 		editor.buffers << file
 	}
+	editor.win.ctx.set_text_style('monofonto rg.otf', '.', editor.win.char_size, gx.black, 0, 0)
 	editor.win.ctx.run()
 }
 
