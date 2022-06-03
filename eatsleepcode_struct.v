@@ -105,6 +105,9 @@ fn (editor EatSleepCode) draw_buffer() {
 		buf.context_rect.height + buf.context_rect.top
 	}
 	for i in buf.context_rect.top .. end_line {
+		if i < 0 {
+			break
+		}
 		if i == buf.controls.cursor_file_y {
 			true_line := get_str_print(b.string(), start, end + 1)
 			editor.draw_text(5, i + 2 - buf.context_rect.top, true_line, false, false,
