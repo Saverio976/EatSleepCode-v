@@ -7,7 +7,7 @@ const (
 	type_color   = gx.green
 	colors_match = ['switch', 'if', 'for', 'while', 'case', 'default', 'do']
 	match_color  = gx.magenta
-	colors_brack = ['{', '}', '(', ')', '[', ']', '\'', '"']
+	colors_brack = ['{', '}', '(', ')', '[', ']', '\'', '"', '?', ':']
 	brack_color = gx.red
 )
 
