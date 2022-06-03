@@ -20,6 +20,14 @@ v .
 
 enter in normal mode
 
+- delete
+
+remove char after cursor
+
+- backspace
+
+remove char before cursor
+
 ### Normal
 
 - i
